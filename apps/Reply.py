@@ -1,28 +1,48 @@
 import os
 import re
+import chardet
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
 def replace_in_file(file_path, search_texts):
+    # Membaca file sebagai biner untuk deteksi encoding
     try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            file_content = file.read()
+        with open(file_path, 'rb') as file:
+            raw_data = file.read()
 
-        # Pecah input teks yang dicari menjadi list
-        search_list = search_texts.splitlines()
+        # Mendeteksi encoding menggunakan chardet
+        result = chardet.detect(raw_data)
+        encoding = result['encoding']
 
-        # Lakukan replace dengan string kosong untuk menghapus teks yang dicari
-        for search_text in search_list:
-            file_content = re.sub(search_text, '', file_content)  # Ganti dengan string kosong (hapus teks)
+        if not encoding:
+            print(f"Error processing {file_path}: Unable to detect encoding.")
+            return
 
-        # Menulis ulang konten yang sudah diganti
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(file_content)
-
-        print(f"Updated: {file_path}")
+        # Baca file dengan encoding yang terdeteksi
+        file_content = raw_data.decode(encoding)
 
     except Exception as e:
-        print(f"Error processing {file_path}: {e}")
+        print(f"Error reading {file_path}: {e}")
+        return
+
+    # Pecah input teks yang dicari menjadi list
+    search_list = search_texts.splitlines()
+
+    # Lakukan replace dengan string kosong untuk menghapus teks yang dicari
+    for search_text in search_list:
+        escaped_text = re.escape(search_text)  # Escape karakter khusus
+        file_content = re.sub(escaped_text, '', file_content)
+
+    # Hapus baris kosong yang mungkin tertinggal
+    cleaned_content = "\n".join([line for line in file_content.splitlines() if line.strip()])
+
+    # Menulis ulang konten yang sudah dirapikan
+    try:
+        with open(file_path, 'w', encoding=encoding) as file:
+            file.write(cleaned_content)
+        print(f"Updated: {file_path}")
+    except Exception as e:
+        print(f"Error writing to {file_path}: {e}")
 
 def replace_in_folder(folder_path, search_texts, file_extension=".txt"):
     for root, dirs, files in os.walk(folder_path):
