@@ -33,7 +33,7 @@ def convert_txt_to_vcf(txt_file_path, contact_name, contacts_per_file, start_num
                             file_number += 1
 
                         vcf_file.write("BEGIN:VCARD\n")
-                        vcf_file.write(f"N:{numbered_contact_name}\n")
+                        vcf_file.write(f"N:{numbered_contact_name} \n")
                         vcf_file.write(f"TEL:{formatted_phone}\n")
                         vcf_file.write("END:VCARD\n")
 
